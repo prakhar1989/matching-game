@@ -1,7 +1,7 @@
 <script lang="ts">
     import { emoji } from "./emoji";
 
-    type State = 'start' | 'won' | 'lost' | 'playing' | 'pause';
+    type State = 'start' | 'won' | 'lost' | 'playing' | 'paused';
 
     let state: State = 'start';
 
@@ -11,6 +11,17 @@
     let maxMatches = 4 //grid.length / 2;
     let selected: number[] = []; // grid indices
     let matches: string[] = [];
+    let timerId: number | null = null;
+    let timeLeft = 20;
+
+
+    function startTimer() {
+        function countDown() {
+            state !== 'paused' && (timeLeft -= 1);
+        }
+
+        timerId = setInterval(countDown, 1000);
+    }
 
     function createGrid() {
         let cards = new Set<string>();
@@ -44,9 +55,15 @@
         state = 'won';
     }
 
+    function gameLost() {
+        state = 'lost';
+    }
+
     function resetGame() {
-        state = 'playing';
         grid = createGrid();
+        state = 'playing';
+        timeLeft = 20;
+        startTimer();
     }
     
     function selectCard(cardIndex: number) {
@@ -61,6 +78,7 @@
     $: maxMatches === matches.length && gameWon();
 
     $: selected.length === 2 && matchCards();
+    $: timeLeft === 0 && gameLost();
 
     $: console.log({state, selected, matches});
 
@@ -75,6 +93,7 @@
 
 
 {#if state === 'playing'}
+<h2>{timeLeft}</h2>
 <div class="cards">
     {#each grid as emoji, cardIndex}
 
@@ -95,7 +114,7 @@
 {/if}
 
 {#if state === 'lost'}
-    <h1>Womp womp! Better luck next time</h1>
+    <h2>Womp womp! Better luck next time</h2>
     <button on:click={() => resetGame()}>
         Play again
     </button>
