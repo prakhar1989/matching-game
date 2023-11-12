@@ -5,10 +5,9 @@
 
     let state: State = 'start';
 
-    let size = 20;
-
+    let size = 4;
     let grid = createGrid();
-    let maxMatches = 4 //grid.length / 2;
+    let maxMatches = grid.length / 2;
     let selected: number[] = []; // grid indices
     let matches: string[] = [];
     let timerId: number | null = null;
@@ -78,7 +77,6 @@
     }
     
     // Reactive stuff
-    $: maxMatches === matches.length && gameWon();
 
     $: selected.length === 2 && matchCards();
     $: timeLeft === 0 && gameLost();
@@ -86,8 +84,10 @@
         // to check for paused
         !timerId && startTimer();
     }
-
-    $: console.log({state, selected, matches});
+    $: if (maxMatches === matches.length) {
+        gameWon();
+    }
+    $: console.log({state, selected, matches, maxMatches});
 
 </script>
 
