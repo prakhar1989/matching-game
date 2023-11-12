@@ -63,6 +63,7 @@
         grid = createGrid();
         timeLeft = 60;
         timerId && clearInterval(timerId);
+        timerId = null;
         maxMatches = grid.length/2;
         selected = [];
         matches = [];
