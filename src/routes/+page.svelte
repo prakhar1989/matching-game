@@ -5,7 +5,7 @@
 
     let state: State = 'start';
 
-    let size = 4;
+    let size = 20;
     let grid = createGrid();
     let maxMatches = grid.length / 2;
     let selected: number[] = []; // grid indices
