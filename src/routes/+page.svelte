@@ -12,14 +12,13 @@
     let selected: number[] = []; // grid indices
     let matches: string[] = [];
     let timerId: number | null = null;
-    let timeLeft = 20;
+    let timeLeft = 60;
 
 
     function startTimer() {
         function countDown() {
             state !== 'paused' && (timeLeft -= 1);
         }
-
         timerId = setInterval(countDown, 1000);
     }
 
@@ -53,17 +52,21 @@
 
     function gameWon() {
         state = 'won';
+        resetGame();
     }
 
     function gameLost() {
         state = 'lost';
+        resetGame();
     }
 
     function resetGame() {
         grid = createGrid();
-        state = 'playing';
-        timeLeft = 20;
-        startTimer();
+        timeLeft = 60;
+        timerId && clearInterval(timerId);
+        maxMatches = grid.length/2;
+        selected = [];
+        matches = [];
     }
     
     function selectCard(cardIndex: number) {
@@ -79,6 +82,10 @@
 
     $: selected.length === 2 && matchCards();
     $: timeLeft === 0 && gameLost();
+    $: if (state === 'playing') {
+        // to check for paused
+        !timerId && startTimer();
+    }
 
     $: console.log({state, selected, matches});
 
@@ -86,14 +93,20 @@
 
 {#if state === 'start'}
     <h1>Matching Game</h1>
-    <button on:click={() => resetGame()}>
+    <button on:click={() => state = 'playing'}>
         Play
     </button>
 {/if}
 
 
 {#if state === 'playing'}
-<h2>{timeLeft}</h2>
+<h1 class="timer" class:pulse={timeLeft <= 10}>{timeLeft}</h1>
+<div class="matches">
+    {#each matches as match}
+        <div>{match}</div>
+    {/each}
+</div>
+
 <div class="cards">
     {#each grid as emoji, cardIndex}
 
@@ -105,24 +118,25 @@
     <button 
         class:selected = {isSelected}
         class:match
+        class:flip = {isSelectedOrMatched}
         disabled = {isSelectedOrMatched}
         on:click={() => selectCard(cardIndex)} class="card">
-        <div>{emoji}</div>
+        <div class="back">{emoji}</div>
     </button>
     {/each}
 </div>
 {/if}
 
 {#if state === 'lost'}
-    <h2>Womp womp! Better luck next time</h2>
-    <button on:click={() => resetGame()}>
+    <h1>Womp womp! Better luck next time</h1>
+    <button on:click={() => state = 'playing'}>
         Play again
     </button>
 {/if}
 
 {#if state === 'won'}
     <h1>You win!</h1>
-    <button on:click={() => resetGame()}>
+    <button on:click={() => state = 'playing'}>
         Play again
     </button>
 {/if}
@@ -139,14 +153,45 @@
         width: 120px;
         font-size: 4rem;
         background-color: var(--bg-2);
+        transition: rotate 0.3s ease-out;
+        transform-style: preserve-3d;
 
         &.selected {
             border: 4px solid var(--border);
         }
 
+        &.flip {
+            rotate: y 180deg;
+            pointer-events: none;
+        }
+
+        & .back {
+            position: absolute;
+			inset: 0;
+			display: grid;
+			place-content: center;
+			backface-visibility: hidden;
+			rotate: y 180deg;
+        }
+
         &.match {
             transition: opacity 0.3s ease-out;
             opacity: 0.4;
+        }
+    }
+
+    .timer {
+        transition: color 0.3s ease;
+    }
+
+    .pulse {
+        color: tomato;
+        animation: pulse 1s infinite ease;
+    }
+
+    @keyframes pulse {
+        to {
+            scale: 1.4;
         }
     }
 
